@@ -87,12 +87,13 @@ class WebsocketApiClient(ApiSocket):
             Log.info(self.__class__.__name__, "Socket <%s> is going to reconnect..." % self.id)
             time.sleep(reconnect_interval)
 
-    def __on_message(self, ws, m):
+    def __on_message(self, m):
         if self._received_data_compressed is True:
             data = zlib.decompress(m, zlib.MAX_WBITS|16).decode('UTF-8')
             m = json.loads(data)
         else:
             m = json.loads(m)
+            print m
         if len(self.on_message_handlers) > 0:
             for handler in self.on_message_handlers:
                 handler(m)
@@ -100,9 +101,9 @@ class WebsocketApiClient(ApiSocket):
     def __on_open(self):
         Log.info(self.__class__.__name__, "Socket <%s> is opened." % self.id)
         self._connected = True
-        #if len(self.on_open_handlers) > 0:
-        #    for handler in self.on_open_handlers:
-        #        handler(ws)
+        if len(self.on_open_handlers) > 0:
+            for handler in self.on_open_handlers:
+                handler(self.ws)
 
     def __on_close(self, ws):
         Log.info(self.__class__.__name__, "Socket <%s> is closed." % self.id)

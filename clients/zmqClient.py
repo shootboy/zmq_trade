@@ -29,8 +29,8 @@ class ZmqClient(DatabaseClient):
         :param path: sqlite file to connect
         """
         addr = kwargs['addr']
-        Logger.info(self.__class__.__name__, 'Zmq client is connecting to %s' % addr)
         self.conn.bind(addr)
+        Logger.info(self.__class__.__name__, 'Zmq client is connecting to %s' % addr)
         return self.conn is not None
 
     def execute(self, sql):
@@ -115,5 +115,6 @@ if __name__ == '__main__':
     db_client = ZmqClient()
     db_client.connect(addr='tcp://127.0.0.1:5000')
     for i in range(1, 100):
+        Logger.info('1','2')
         db_client.insert('test', ['c1', 'c2', 'c3', 'c4'], [], ['abc', u'sb_'+str(i), 1.1, 5])
         time.sleep(0.1)

@@ -6,7 +6,7 @@
 @Motto：I have a bad feeling about this.
 """
 from api.ws_api_socket import WebsocketApiClient
-from exchanges.gateway import TradeExchangeGateway
+from exchanges.gateway import ExchangeGateway
 from util.market_data import L2Depth, Trade
 from util.Log import Logger
 from datetime import datetime, timedelta
@@ -75,22 +75,12 @@ class ExchTradeDeribitWs(WebsocketApiClient):
         d['parameters'] = params
         return json.dumps(d)
 
-class ExchGwTradeDeribit(TradeExchangeGateway):
+class ExchGwTradeDeribit(ExchangeGateway):
 
-    def __init__(self, apiKey, secretKey, db_clients):
-        TradeExchangeGateway.__init__(self, ExchTradeDeribitWs(), db_clients)
-        self.apiKey = apiKey
-        self.secretKey = secretKey
-
-        self.accountData = None
-        self.tradeData = None
-        self.orderData = None
-        self.local_pos = 0
-        self.system_pos = 0
-        self.trade_id = 0
-        self.cancelDict = {}
-
-        self.instmt = None
+    def __init__(self, db_clients):
+        ExchangeGateway.__init__(self, ExchTradeDeribitWs(), db_clients)
+        #self.apiKey = apiKey
+        #self.secretKey = secretKey
 
     @classmethod
     def get_exchange_name(cls):
@@ -98,7 +88,7 @@ class ExchGwTradeDeribit(TradeExchangeGateway):
         Get exchange name
         :return: Exchange name string
         """
-        return 'Okex'
+        return 'Deribit'
 
     def on_open_handler(self, instmt, ws):
         """
@@ -113,7 +103,7 @@ class ExchGwTradeDeribit(TradeExchangeGateway):
                         'last trade string:{}'.format(self.api_socket.get_last_trades_subscription_string(instmt)))
             Logger.info(self.__class__.__name__,
                         'ticker string:{}'.format(self.api_socket.get_ticker_subscription_string(instmt)))
-            ws.send(self.api_socket.get_last_trades_subscription_string(instmt))
+            #ws.send(self.api_socket.get_last_trades_subscription_string(instmt))
             ws.send(self.api_socket.get_ticker_subscription_string(instmt))
             instmt.set_subscribed(True)
 
@@ -136,6 +126,7 @@ class ExchGwTradeDeribit(TradeExchangeGateway):
         print message
 
     def start(self, instmt):
+        self.init_instmt_snapshot_table(instmt)
         Logger.info(self.__class__.__name__,
                     'instmt snapshot table: {}'.format(instmt.get_instmt_code()))
         return [self.api_socket.connect(self.api_socket.get_link(),
@@ -153,5 +144,5 @@ if __name__ == '__main__':
     instmt_name = 'BTC'
     instmt_code = 'BTC-20DEC19-7250-C'
     instmt = Instrument(exchange_name, instmt_name, instmt_code)
-    exch = ExchGwTradeDeribit([],[],[])
+    exch = ExchGwTradeDeribit([])
     exch.start(instmt)
